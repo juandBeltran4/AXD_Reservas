@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reservas Hoteleras</title>
+
+<style>
+    body {
+        font-family: Arial;
+        margin: 40px;
+        background: white;
+        color: black;
+    }
+
+    .formulario {
+        max-width: 450px;
+    }
+
+    h2 {
+        border-bottom: 1px solid black;
+        padding-bottom: 10px;
+    }
+
+    label {
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #999;
+        box-sizing: border-box;
+    }
+
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: black;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    #resultado {
+        margin-top: 25px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="formulario">
+
+    <h2>Consulta de disponibilidad</h2>
+
+    <label>Hotel</label>
+    <select id="hotel">
+        <option value="1">Barranquilla</option>
+        <option value="2">Cali</option>
+        <option value="3">Cartagena</option>
+        <option value="4">Bogotá</option>
+    </select>
+
+    <label>Tipo de habitación</label>
+    <select id="tipo">
+        <option value="estandar">Estándar</option>
+        <option value="premium">Premium</option>
+        <option value="vip">VIP</option>
+    </select>
+
+    <label>Fecha de entrada</label>
+    <input type="date" id="entrada">
+
+    <label>Fecha de salida</label>
+    <input type="date" id="salida">
+
+    <label>Personas</label>
+    <input type="number" id="personas" min="1" value="2">
+
+    <label>Habitaciones</label>
+    <input type="number" id="habitaciones" min="1" value="1">
+
+    <label>Temporada</label>
+    <select id="temporada">
+        <option value="baja">Baja</option>
+        <option value="alta">Alta</option>
+    </select>
+
+    <button onclick="buscar()">Consultar</button>
+
+    <div id="resultado"></div>
+
+</div>
+
+<script>
+async function buscar() {
+    let hotel = document.getElementById("hotel").value;
+    let tipo = document.getElementById("tipo").value;
+    let entrada = document.getElementById("entrada").value;
+    let salida = document.getElementById("salida").value;
+    let personas = document.getElementById("personas").value;
+    let habitaciones = document.getElementById("habitaciones").value;
+    let temporada = document.getElementById("temporada").value;
+    let resultado = document.getElementById("resultado");
+
+    if (!entrada || !salida || salida <= entrada) {
+        resultado.innerText = "Verifique las fechas";
+    return;
+    }
+
+    let url = `http://127.0.0.1:8000/cotizar?hotel_id=${hotel}&tipo=${tipo}&temporada=${temporada}&personas=${personas}&habitaciones=${habitaciones}&fecha_inicio=${entrada}&fecha_fin=${salida}`;
+
+    resultado.innerText = "Consultando...";
+
+    try {
+        let respuesta = await fetch(url);
+
+    if (!respuesta.ok) {
+        throw new Error("Error en el servidor");
+    }
+
+    let datos = await respuesta.json();
+
+    if (datos.error) {
+        resultado.innerText = datos.error;
+    } else {
+        resultado.innerHTML = `
+        <h3>Resultado</h3>
+        <p>Habitaciones disponibles: ${datos.disponibles}</p>
+        <p>Noches: ${datos.noches}</p>
+        <p>Total: $${datos.total.toLocaleString("es-CO")}</p>
+        `;
+    }
+
+    } catch (error) {
+        resultado.innerText = "No se pudo conectar con el servidor";
+        console.error(error);
+    }
+}
+</script>
+
+</body>
+</html>
+
